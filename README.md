@@ -3,7 +3,7 @@ This is the code as well as the schematic for the electronics portion of CyberCa
 
 # Set Up #
 This circuit is powered by a Wemos D1 Mini, a Maxium7219, and an anode 8x8 LED matrix
-![The Circuit](/img/Cyber-Camp.jpg?raw=true)
+![The Circuit](/img/Cyber-Camp.svg?raw=false)
 
 ## Programming With the Arduino IDE ##
 --------------------------------------
