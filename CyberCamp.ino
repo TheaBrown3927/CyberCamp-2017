@@ -36,7 +36,7 @@ Max72xxPanel matrix = Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVe
 
 // Use web browser to view and copy
 // SHA1 fingerprint of the certificate
-const char* fingerprint = "A3 BF FD 76 39 6D 56 8A 9E 0C FD 15 87 4A FC D8 37 29 76 8B";
+const char* fingerprint = "D3 1B F4 69 70 D3 75 6E 01 EF C7 C5 E4 96 A5 DC C3 91 2E FA";
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
     case WIFI_EVENT_STAMODE_GOT_IP:
