@@ -52,6 +52,7 @@ void WiFiEvent(WiFiEvent_t event) {
 
 void setup() {
   matrix.setIntensity(0); // Use a value between 0 and 15 for brightness
+  matrix.setRotation(0, 2);
   EEPROM.begin(512);
   Serial.begin(115200);
   matrix.fillScreen(HIGH);
