@@ -15,8 +15,8 @@
 #include <EEPROM.h>
 
 
-String ssid[1] = {"ssid"};
-String password[1] = {"password"};
+String ssid[] = {"ssid"};
+String password[] = {"password"};
 
 const char* ssid2;
 const char* password2;
@@ -26,6 +26,8 @@ String results;
 const char* host = "mikej.tech";
 const int httpsPort = 443;
 
+int pinButton = 15;
+int pinBuzzer = 4;
 int pinCS = 5; // Attach CS to this pin, DIN to MOSI and CLK to SCK (cf http://arduino.cc/en/Reference/SPI )
 int numberOfHorizontalDisplays = 1;
 int numberOfVerticalDisplays = 1;
@@ -55,11 +57,17 @@ void setup() {
   matrix.setRotation(0, 2);
   EEPROM.begin(512);
   Serial.begin(115200);
+  pinMode(pinButton, INPUT);
+  pinMode(pinBuzzer, OUTPUT);
   matrix.fillScreen(HIGH);
   matrix.write(); // Send bitmap to display
   wifisetup();
 
 }
+
+
+
+int option = 0; //This tells the program what to load, the text scrolling (0) or the game (1)
 
 void loop() {
   // Use WiFiClientSecure class to create TLS connection
@@ -78,6 +86,16 @@ void loop() {
     Serial.println("certificate doesn't match");
   }
 
+  
+  if(option == 0){
+    option = scrollMessage(client, option);
+  }else{
+    option = game(client, option);
+  }
+
+}
+
+int scrollMessage(WiFiClientSecure client, int opt) {
   String url = "/content/hidden.txt";
 
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
@@ -97,10 +115,11 @@ void loop() {
   String line = client.readStringUntil('\n');
   save(line);
   Serial.println(line);
-  displayLine(line);
-
+  opt = displayLine(line, opt);
+  return opt;
 }
-void displayLine(String line) {
+
+int displayLine(String line, int option) {
   int pos = line.indexOf(":");
   String tape = line.substring(0, pos) + " ";
   String brightness = line.substring(pos + 1);
@@ -114,14 +133,17 @@ void displayLine(String line) {
   matrix.setIntensity(brightness.toInt());
   unsigned long startTime = millis();
   unsigned long endTime = startTime + 60000;
-  while (startTime < endTime) {
-    for ( int i = 0 ; i < width * tape.length() + matrix.width() - 1 - spacer; i++ ) {
+  while (startTime < endTime && option == 0) {
+    for ( int i = 0 ; i < width * tape.length() + matrix.width() - 1 - spacer && option == 0; i++ ) {
       matrix.fillScreen(LOW);
       int letter = i / width;
-      //    int letter = i;
       int x = (matrix.width() - 1) - i % width;
       int y = (matrix.height() - 8) / 2; // center the text vertically
       while ( x + width - spacer >= 0 && letter >= 0 ) {
+        if(digitalRead(pinButton)){
+          option = 1;
+        }
+        
         if ( letter < tape.length() ) {
           matrix.drawChar(x, y, tape[letter], HIGH, LOW, 1);
         }
@@ -141,7 +163,10 @@ void displayLine(String line) {
       startTime = endTime;
     }
   }
+  return option;
 }
+
+
 void save(String text) {
   for (int a = 0; a < 512; a++) {
     EEPROM.write(a, 0);
@@ -152,12 +177,10 @@ void save(String text) {
     char val = text[i];
     EEPROM.write(addr, val);
   }
-  //  for (int a = 0; a < 512 - text.length(); a++) {
-  //    addr++;
-  //    EEPROM.write(addr, 0);
-  //  }
   EEPROM.commit();
 }
+
+
 void readText() {
   int addr = 0;
   String text = "";
@@ -169,8 +192,24 @@ void readText() {
     }
     addr++;
   }
-  displayLine(text);
+  displayLine(text, 0);
 }
+
+
+int game(WiFiClientSecure client, int option){
+  //This is where the programming for the game will go
+
+  return option; //used to switch back to scrolling the text by sending the value of 0
+}
+
+
+void uploadScores(WiFiClientSecure client, String user, int score) {
+  String url = "/cybergame/scores.php?name=" + user + "&score=" + score;
+
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
+
+}
+
 void wifisetup() {
   WiFi.onEvent(WiFiEvent);
   WiFi.mode(WIFI_STA);
