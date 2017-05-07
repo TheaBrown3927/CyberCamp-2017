@@ -114,12 +114,15 @@ int scrollMessage(WiFiClientSecure client, int opt) {
 
   String line = client.readStringUntil('\n');
   save(line);
+  Serial.print("Raw data = ");
   Serial.println(line);
   opt = displayLine(line, opt);
   return opt;
 }
 
 int displayLine(String line, int option) {
+  unsigned long buttonTime = 0;
+  bool pressed = false;
   int pos = line.indexOf(":");
   String tape = line.substring(0, pos) + " ";
   String brightness = line.substring(pos + 1);
@@ -127,12 +130,15 @@ int displayLine(String line, int option) {
   String count = brightness.substring(pos + 1);
   brightness = brightness.substring(0, pos);
   int wait = count.toInt();
+  Serial.print("Scrolling text = ");
   Serial.println(tape);
+  Serial.print("Brightness = ");
   Serial.println(brightness);
+  Serial.print("Delay between screen updates = ");
   Serial.println(wait);
   matrix.setIntensity(brightness.toInt());
   unsigned long startTime = millis();
-  unsigned long endTime = startTime + 60000;
+  unsigned long endTime = startTime + 120000;
   while (startTime < endTime && option == 0) {
     for ( int i = 0 ; i < width * tape.length() + matrix.width() - 1 - spacer && option == 0; i++ ) {
       matrix.fillScreen(LOW);
@@ -140,10 +146,16 @@ int displayLine(String line, int option) {
       int x = (matrix.width() - 1) - i % width;
       int y = (matrix.height() - 8) / 2; // center the text vertically
       while ( x + width - spacer >= 0 && letter >= 0 ) {
-        if(digitalRead(pinButton)){
+        if (digitalRead(pinButton) && buttonTime <= startTime && pressed) {
           option = 1;
+          pressed = false;
+        }else if(digitalRead(pinButton) && buttonTime <= startTime && !pressed){
+          pressed = true;
+          buttonTime = startTime + 1000;
+        }else if(!digitalRead(pinButton) && buttonTime <= startTime && pressed){
+          pressed = false;
         }
-        
+
         if ( letter < tape.length() ) {
           matrix.drawChar(x, y, tape[letter], HIGH, LOW, 1);
         }
@@ -152,11 +164,11 @@ int displayLine(String line, int option) {
         x -= width;
       }
       matrix.write(); // Send bitmap to display
-
+      startTime = millis();
       delay(wait);
     }
-    startTime = millis();
-    Serial.println(endTime - startTime);
+    Serial.print(endTime - startTime);
+    Serial.println(" milliseconds until update is checked for");
     if (line == "") {
       save("Cyber Camp 2017:5:80");
 
@@ -165,8 +177,6 @@ int displayLine(String line, int option) {
   }
   return option;
 }
-
-
 void save(String text) {
   for (int a = 0; a < 512; a++) {
     EEPROM.write(a, 0);
