@@ -17,7 +17,7 @@ int numberOfVerticalDisplays = 1;
 Max72xxPanel matrix = Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 
 void setup() {
-  matrix.setIntensity(0);
+  matrix.setIntensity(2);
   matrix.setRotation(0, 2);    // The first display is position upside down
   matrix.invertDisplay(true);
   pinMode(pinBuzzer, OUTPUT);
