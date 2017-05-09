@@ -35,7 +35,7 @@ String results;
 
 int movCounter = 0;
 
-int lives = 4;
+int lives = 100;
 int board[8][8] = {0};
 int obstaclePlace = 0;
 long gameTick = 0;
